@@ -87,3 +87,9 @@ public class ChessBoard {
         return Arrays.deepHashCode(board);
     }
 }
+
+    @Override
+        public String toString() {
+                    return Arrays.deepToString(board);
+        }
+        }
