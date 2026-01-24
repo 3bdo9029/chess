@@ -1,9 +1,7 @@
 package chess;
-
 import java.util.Arrays;
 
 /**
- * 
  * A chessboard that can hold and rearrange chess pieces.
  * <p>
  * Note: You can add to this class, but you may not alter
@@ -11,11 +9,10 @@ import java.util.Arrays;
  */
 public class ChessBoard {
 
-        private ChessPiece[][] board;
+    private ChessPiece[][] board;
 
     public ChessBoard() {
-                board = new ChessPiece[8][8];
-        
+        board = new ChessPiece[8][8];
     }
 
     /**
@@ -25,8 +22,9 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-    }        if (position == null) return;
+        if (position == null) return;
         board[position.getRow() - 1][position.getColumn() - 1] = piece;
+    }
 
     /**
      * Gets a chess piece on the chessboard
@@ -36,15 +34,16 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-    }        if (position == null) return null;
+        if (position == null) return null;
         return board[position.getRow() - 1][position.getColumn() - 1];
+    }
 
     /**
      * Sets the board to the default starting board
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-    }        board = new ChessPiece[8][8];
+        board = new ChessPiece[8][8];
 
         // White pieces (row 1) and pawns (row 2)
         board[0] = backRow(ChessGame.TeamColor.WHITE);
@@ -53,8 +52,9 @@ public class ChessBoard {
         // Black pieces (row 8) and pawns (row 7)
         board[7] = backRow(ChessGame.TeamColor.BLACK);
         board[6] = pawnRow(ChessGame.TeamColor.BLACK);
+    }
 
-        private ChessPiece[] pawnRow(ChessGame.TeamColor color) {
+    private ChessPiece[] pawnRow(ChessGame.TeamColor color) {
         ChessPiece[] row = new ChessPiece[8];
         for (int i = 0; i < 8; i++) {
             row[i] = new ChessPiece(color, ChessPiece.PieceType.PAWN);
@@ -62,7 +62,7 @@ public class ChessBoard {
         return row;
     }
 
-        private ChessPiece[] backRow(ChessGame.TeamColor color) {
+    private ChessPiece[] backRow(ChessGame.TeamColor color) {
         return new ChessPiece[]{
                 new ChessPiece(color, ChessPiece.PieceType.ROOK),
                 new ChessPiece(color, ChessPiece.PieceType.KNIGHT),
@@ -75,21 +75,21 @@ public class ChessBoard {
         };
     }
 
-        // Highly recommended for tests that compare boards
+    // Highly recommended for tests that compare boards
     @Override
     public boolean equals(Object o) {
-                if (this == o) return true;
+        if (this == o) return true;
         if (!(o instanceof ChessBoard other)) return false;
         return Arrays.deepEquals(this.board, other.board);
+    }
 
-            @Override
+    @Override
     public int hashCode() {
         return Arrays.deepHashCode(board);
     }
-}
 
     @Override
-        public String toString() {
-                    return Arrays.deepToString(board);
-        }
-        }
+    public String toString() {
+        return Arrays.deepToString(board);
+    }
+}
