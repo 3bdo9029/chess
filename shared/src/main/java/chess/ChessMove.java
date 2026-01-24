@@ -10,8 +10,9 @@ public class ChessMove {
 
     private final ChessPosition startPosition;
     private final ChessPosition endPosition;
-    private final ChessPiece.PieceType promotionPiece; // may be null
+    private final ChessPiece.PieceType promotionPiece;
 
+    // Constructs a move from start -> end, optionally with a promotion type
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {
         if (startPosition == null) {
@@ -51,6 +52,7 @@ public class ChessMove {
 
     @Override
     public boolean equals(Object o) {
+        // True only if o is a ChessMove with same start, end, and promotion type
         return (o instanceof ChessMove other)
                 && this.startPosition.equals(other.startPosition)
                 && this.endPosition.equals(other.endPosition)

@@ -19,7 +19,7 @@ public class ChessPiece {
     private final ChessGame.TeamColor pieceColor;
     private final ChessPiece.PieceType type;
 
-    // Useful for debugging; not required, but safe to include.
+    // Maps piece types to a single character for printing/debugging
     private static final Map<ChessPiece.PieceType, Character> TYPE_TO_CHAR =
             Map.of(
                     PieceType.PAWN, 'p',
@@ -30,7 +30,9 @@ public class ChessPiece {
                     PieceType.KING, 'k'
             );
 
+    // Creates a chess piece with a team color and a piece type
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
+        // Validate inputs
         if (pieceColor == null) throw new IllegalArgumentException("pieceColor cannot be null");
         if (type == null) throw new IllegalArgumentException("type cannot be null");
         this.pieceColor = pieceColor;
@@ -228,6 +230,7 @@ public class ChessPiece {
 
     @Override
     public int hashCode() {
+        // Combine hashes from color and type
         int hash = 7;
         hash = 31 * hash + pieceColor.hashCode();
         hash = 31 * hash + type.hashCode();

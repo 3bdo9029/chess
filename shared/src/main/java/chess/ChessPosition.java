@@ -50,6 +50,7 @@ public class ChessPosition {
         return "(" + getRow() + ", " + getColumn() + ")";
     }
 
+    // Helper to enforce coordinates stay inside 1..8
     private static void requireOnBoard(int row, int col) {
         if (row < MIN || row > MAX || col < MIN || col > MAX) {
             throw new IllegalArgumentException("Row/col must be in 1..8: (" + row + ", " + col + ")");
