@@ -13,6 +13,8 @@ public class ChessBoard {
     // Board indexed as [row-1][col-1]
     private final ChessPiece[][] squares = new ChessPiece[8][8];
 
+    // Default constructor
+    // Board starts empty (all null squares)
     public ChessBoard() {
     }
 
@@ -26,7 +28,9 @@ public class ChessBoard {
         if (position == null) {
             throw new IllegalArgumentException("position cannot be null");
         }
-        squares[position.getRow() - 1][position.getColumn() - 1] = piece; // piece may be null
+
+        // Convert 1-based row/col into 0-based array index and store the piece
+        squares[position.getRow() - 1][position.getColumn() - 1] = piece;
     }
 
     /**
@@ -40,6 +44,8 @@ public class ChessBoard {
         if (position == null) {
             throw new IllegalArgumentException("position cannot be null");
         }
+
+        // Convert 1-based row/col into 0-based array index and return the piece
         return squares[position.getRow() - 1][position.getColumn() - 1];
     }
 
@@ -48,6 +54,7 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
+        // Clear anything currently on the board
         clear();
 
         // White pieces (bottom: rows 1-2)
@@ -63,18 +70,22 @@ public class ChessBoard {
     // Helpers (added)
     // -----------------------
 
+    // Clears the board by setting every square to null
     private void clear() {
         for (int r = 0; r < 8; r++) {
             Arrays.fill(squares[r], null);
         }
     }
 
+    // Places 8 pawns across the given row for the given color
     private void placePawns(int row, ChessGame.TeamColor color) {
         for (int col = 1; col <= 8; col++) {
+        // Create a pawn and place it at (row, col)
             addPiece(new ChessPosition(row, col), new ChessPiece(color, ChessPiece.PieceType.PAWN));
         }
     }
 
+    // Places the back rank (rook, knight, bishop, queen, king, bishop, knight, rook) for the given color
     private void placeBackRank(int row, ChessGame.TeamColor color) {
         addPiece(new ChessPosition(row, 1), new ChessPiece(color, ChessPiece.PieceType.ROOK));
         addPiece(new ChessPosition(row, 2), new ChessPiece(color, ChessPiece.PieceType.KNIGHT));
@@ -88,7 +99,10 @@ public class ChessBoard {
 
     @Override
     public boolean equals(Object o) {
+        // Only boards can be equal to boards
         if (!(o instanceof ChessBoard other)) return false;
+
+        // Compare the 2D piece grid
         return Arrays.deepEquals(this.squares, other.squares);
     }
 
@@ -99,16 +113,27 @@ public class ChessBoard {
 
     @Override
     public String toString() {
+        // Build a printable board from rank 8 down to rank 1
         StringBuilder sb = new StringBuilder();
+
+        // Ranks (rows) 8 -> 1
         for (int r = 8; r >= 1; r--) {
+            // Print the rank label
             sb.append(r).append(" ");
+
             for (int c = 1; c <= 8; c++) {
                 ChessPiece p = getPiece(new ChessPosition(r, c));
                 sb.append(p == null ? "." : p.toString()).append(" ");
             }
+
+            // New line after each rank
             sb.append('\n');
         }
+
+        // New line after each rank
         sb.append("  a b c d e f g h");
+
+        
         return sb.toString();
     }
 }
