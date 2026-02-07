@@ -225,9 +225,9 @@ public class ChessGame {
         // For every friendly piece on the board, check if it can move to a
         // position. If any friendly piece can move, we are not in stalemate.
         for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col+) {
+            for (int col = 1; col <= 8; col++) {
                 ChessPosition position = new ChessPosition(row, col);
-                ChessPiece piece = board.getPiece(position)
+                ChessPiece piece = board.getPiece(position);
 
                 if (piece == null) continue;
                 if (piece.getTeamColor() != teamColor) continue;
