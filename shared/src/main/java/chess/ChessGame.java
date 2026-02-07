@@ -14,6 +14,9 @@ public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
 
+    // The team that forfeited the game. Null if no team has forfeited.
+    private TeamColor resigned;
+
     public ChessGame() {
         this.teamTurn = TeamColor.WHITE;
         this.board = new ChessBoard();
