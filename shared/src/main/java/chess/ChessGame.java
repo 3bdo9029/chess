@@ -85,6 +85,20 @@ public class ChessGame {
         ChessPiece piece = board.getPiece(startPosition);
         if (piece == null) {
             return null;
+        }
+
+        Collection<ChessMove> allMoves = piece.pieceMoves(board, startPosition);
+
+        HashSet<ChessMove> safeMoves = new HashSet<>();
+        for (ChessMove move : allMoves) {
+            ChessGame simulation = new ChessGame(board, teamTurn);
+            simulation.getBoard().movePiece(move);
+
+            if (!simulation.isInCheck(piece.getTeamColor())) {
+                safeMoves.add(move)
+            }
+        }
+        return safeMoves;
     }
 
     /**
@@ -94,7 +108,33 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        throw new RuntimeException("Not implemented");
+        // A move is illegal if the game has been resigned.
+        if (resigned != null) {
+            throw new InvalidMoveException("The game has been resigned. No moves can be made.");
+        }
+
+        ChessPosition start = move.getStartPosition();
+        ChessPiece movingPiece = board.getPiece(start);
+
+        // Keep behavior consistent with "invalid move" handling.
+        if (movingPiece == null) {
+            throw new InvalidMoveException("No piece at the start position.");
+        }
+
+        // A move is illegal if it’s not the corresponding team's turn.
+        if (movingPiece.getTeamColor() != teamTurn) {
+            throw new InvalidMoveException("It is not your turn.");
+        }
+
+        // A move is illegal if the chess piece cannot move there.
+        Collection<ChessMove> legal = validMoves(start);
+        if (legal == null || !legal.contains(move)) {
+            throw new InvalidMoveException("This piece cannot make this move.");
+        }
+
+        // Otherwise, the move is legal, and the piece is moved.
+        board.movePiece(move);
+        teamTurn = (teamTurn == TeamColor.WHITE) ? TeamColor.BLACK : TeamColor.WHITE;
     }
 
     /**
@@ -104,7 +144,36 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        // Find the position of the king.
+        ChessPiece king = new ChessPiece(teamColor, ChessPiece.PieceType.KING);
+        ChessPosition kingPosition = board.findPiece(king);
+
+        // If there is no king, we cannot be in check.
+        if (kingPosition == null) {
+            System.out.println(String.format("No %s found in board:\n%s", king, board));
+            return false;
+        }
+
+        // For every enemy piece on the board, check if it can move to the same
+        // position as the king (i.e. capture the king).
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(position);
+
+                if (piece == null) continue;
+                if (piece.getTeamColor() == teamColor) continue;
+
+                for (ChessMove move : piece.pieceMoves(board, position)) {
+                    if (kingPosition.equals(move.getEndPosition())) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // No enemy piece can capture the king.
+        return false;
     }
 
     /**
