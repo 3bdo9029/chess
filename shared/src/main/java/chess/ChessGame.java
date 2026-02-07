@@ -52,7 +52,7 @@ public class ChessGame {
      * @param team the team whose turn it is
      */
     public void setTeamTurn(TeamColor team) {
-        throw new RuntimeException("Not implemented");
+        this.teamTurn = team;
     }
 
     /**
@@ -63,6 +63,17 @@ public class ChessGame {
         BLACK
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof ChessGame)) return false;
+
+        ChessGame that = (ChessGame) other;
+
+        // Match original behavior: compares board + teamTurn only (ignores resigned)
+        return Objects.equals(this.board, that.board) && this.teamTurn == that.teamTurn;
+    }
+
     /**
      * Gets a valid moves for a piece at the given location
      *
@@ -71,7 +82,9 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        throw new RuntimeException("Not implemented");
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) {
+            return null;
     }
 
     /**
