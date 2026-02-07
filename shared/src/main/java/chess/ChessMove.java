@@ -12,6 +12,11 @@ public class ChessMove {
     private final ChessPosition endPosition;
     private final ChessPiece.PieceType promotionPiece;
 
+    public void movePiece(ChessMove move) {
+        // TODO: implement properly later (handle captures, promotion, etc.)
+    }
+
+
     // Constructs a move from start -> end, optionally with a promotion type
     public ChessMove(ChessPosition startPosition, ChessPosition endPosition,
                      ChessPiece.PieceType promotionPiece) {

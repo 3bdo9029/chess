@@ -10,6 +10,16 @@ import java.util.Arrays;
  */
 public class ChessBoard {
 
+    public ChessBoard(ChessBoard other) {
+        // TODO: make a shallow or deep copy depending on your design.
+        // Minimal compile version could copy squares/pieces.
+    }
+
+    public ChessPosition findPiece(ChessPiece target) {
+        // TODO: scan board and return position of a matching piece or null
+        return null;
+    }
+
     // Board indexed as [row-1][col-1]
     private final ChessPiece[][] squares = new ChessPiece[8][8];
 
