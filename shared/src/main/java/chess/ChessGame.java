@@ -95,7 +95,7 @@ public class ChessGame {
             simulation.getBoard().movePiece(move);
 
             if (!simulation.isInCheck(piece.getTeamColor())) {
-                safeMoves.add(move)
+                safeMoves.add(move);
             }
         }
         return safeMoves;
@@ -183,7 +183,35 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        // If we are not in check, we cannot be in checkmate.
+        if (!isInCheck(teamColor)) {
+            return false;
+        }
+
+        // For every friendly piece on the board, check if it can move to a position
+        // where we would no longer be in check.
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(position);
+
+                if (piece == null) continue;
+                if (piece.getTeamColor() != teamColor) continue;
+
+                for (ChessMove move : piece.pieceMoves(board, position)) {
+                    ChessGame simulation = new ChessGame(board, teamTurn);
+                    simulation.getBoard().movePiece(move);
+
+                    if (!simulation.isInCheck(teamColor)) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // No friendly piece can move to a position where we would no longer be in
+        // check. Thus, we are in checkmate and have lost the game.
+        return true;
     }
 
     /**
@@ -194,7 +222,25 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        // For every friendly piece on the board, check if it can move to a
+        // position. If any friendly piece can move, we are not in stalemate.
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col+) {
+                ChessPosition position = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(position)
+
+                if (piece == null) continue;
+                if (piece.getTeamColor() != teamColor) continue;
+
+                Collection<ChessMove> moves = validMoves(position);
+                if (moves != null && !moves.isEmpty()) {
+                    return false;
+                }
+            }
+        }
+
+        // No friendly piece can make a move. Thus, we are in stalemate.
+        return true;
     }
 
     /**
