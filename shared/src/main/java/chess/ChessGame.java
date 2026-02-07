@@ -21,10 +21,29 @@ public class ChessGame {
     }
 
     /**
+     * Creates a shallow clone of the given chessboard
+     *
+     * @param board the board to clone
+     * @param teamTurn the team whose turn it is
+     */
+    public ChessGame(ChessBoard board, TeamColor teamTurn) {
+        this.board = new ChessBoard(board);
+        this.teamTurn = teamTurn;
+    }
+
+    public TeamColor getResigned() {
+        return resigned;
+    }
+
+    public void setResigned(TeamColor resigned) {
+        this.resigned = resigned;
+    }
+
+    /**
      * @return Which team's turn it is
      */
     public TeamColor getTeamTurn() {
-        return resigned;
+        return teamTurn;
     }
 
     /**
