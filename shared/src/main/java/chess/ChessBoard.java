@@ -10,22 +10,74 @@ import java.util.Arrays;
  */
 public class ChessBoard {
 
-    public ChessBoard(ChessBoard other) {
-        // TODO: make a shallow or deep copy depending on your design.
-        // Minimal compile version could copy squares/pieces.
-    }
-
-    public ChessPosition findPiece(ChessPiece target) {
-        // TODO: scan board and return position of a matching piece or null
-        return null;
-    }
-
     // Board indexed as [row-1][col-1]
     private final ChessPiece[][] squares = new ChessPiece[8][8];
 
     // Default constructor
     // Board starts empty (all null squares)
     public ChessBoard() {
+    }
+
+    /**
+     * Creates a shallow clone of the given chessboard
+     *
+     * @param other the board to clone
+     */
+    public ChessBoard(ChessBoard other) {
+        if (other == null) {
+            throw new IllegalArgumentException("other board cannot be null");
+        }
+        for (int r = 0; r < 8; r++) {
+            System.arraycopy(other.squares[r], 0, this.squares[r], 0, 8);
+        }
+    }
+
+    /**
+     * Finds the first occurrence of a matching piece on the board.
+     * Returns null if not found.
+     */
+    public ChessPosition findPiece(ChessPiece target) {
+        if (target == null) return null;
+
+        for (int row = 1; row <= 8; row++) {
+            for (int col = 1; col <= 8; col++) {
+                ChessPiece piece = squares[row - 1][col - 1];
+                if (piece == null) continue;
+
+                if (piece.getTeamColor() == target.getTeamColor()
+                        && piece.getPieceType() == target.getPieceType()) {
+                    return new ChessPosition(row, col);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Moves a piece from the start position to the end position.
+     * Captures are handled by overwriting the destination square.
+     * Promotion is handled if the move includes a promotion piece.
+     */
+    public void movePiece(ChessMove move) {
+        if (move == null) {
+            throw new IllegalArgumentException("move cannot be null");
+        }
+
+        ChessPosition start = move.getStartPosition();
+        ChessPosition end = move.getEndPosition();
+
+        ChessPiece moving = getPiece(start);
+        if (moving == null) {
+            return;
+        }
+
+        // Handle promotion (if present)
+        if (move.getPromotionPiece() != null && moving.getPieceType() == ChessPiece.PieceType.PAWN) {
+            moving = new ChessPiece(moving.getTeamColor(), move.getPromotionPiece());
+        }
+
+        addPiece(end, moving);
+        addPiece(start, null);
     }
 
     /**
@@ -90,7 +142,6 @@ public class ChessBoard {
     // Places 8 pawns across the given row for the given color
     private void placePawns(int row, ChessGame.TeamColor color) {
         for (int col = 1; col <= 8; col++) {
-        // Create a pawn and place it at (row, col)
             addPiece(new ChessPosition(row, col), new ChessPiece(color, ChessPiece.PieceType.PAWN));
         }
     }
@@ -132,18 +183,14 @@ public class ChessBoard {
             sb.append(r).append(" ");
 
             for (int c = 1; c <= 8; c++) {
-                ChessPiece p = getPiece(new ChessPosition(r, c));
+                ChessPiece p = squares[r - 1][c - 1];
                 sb.append(p == null ? "." : p.toString()).append(" ");
             }
 
-            // New line after each rank
             sb.append('\n');
         }
 
-        // New line after each rank
         sb.append("  a b c d e f g h");
-
-        
         return sb.toString();
     }
 }
