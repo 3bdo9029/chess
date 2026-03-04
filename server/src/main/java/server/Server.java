@@ -1,7 +1,7 @@
 package server;
 
 import com.google.gson.Gson;
-import dataAccess.*;
+import dataaccess.*;
 import exception.ResponseException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
@@ -9,7 +9,7 @@ import model.*;
 import service.*;
 
 public class Server {
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
 
     private final Javalin javalin;
 
@@ -58,40 +58,40 @@ public class Server {
             ctx.result("{}");
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
     private void register(Context ctx) {
         ctx.contentType("application/json");
         try {
-            UserData user = gson.fromJson(ctx.body(), UserData.class);
+            UserData user = GSON.fromJson(ctx.body(), UserData.class);
             ctx.status(200);
-            ctx.result(gson.toJson(userService.registerUser(user)));
+            ctx.result(GSON.toJson(userService.registerUser(user)));
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
     private void login(Context ctx) {
         ctx.contentType("application/json");
         try {
-            LoginRequest loginRequest = gson.fromJson(ctx.body(), LoginRequest.class);
+            LoginRequest loginRequest = GSON.fromJson(ctx.body(), LoginRequest.class);
             ctx.status(200);
-            ctx.result(gson.toJson(userService.loginUser(loginRequest)));
+            ctx.result(GSON.toJson(userService.loginUser(loginRequest)));
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
@@ -104,10 +104,10 @@ public class Server {
             ctx.result("{}");
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
@@ -116,13 +116,13 @@ public class Server {
         try {
             String authToken = ctx.header("authorization");
             ctx.status(200);
-            ctx.result(gson.toJson(gameService.listGames(authToken)));
+            ctx.result(GSON.toJson(gameService.listGames(authToken)));
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
@@ -130,16 +130,16 @@ public class Server {
         ctx.contentType("application/json");
         try {
             String authToken = ctx.header("authorization");
-            GameData gameData = gson.fromJson(ctx.body(), GameData.class);
+            GameData gameData = GSON.fromJson(ctx.body(), GameData.class);
 
             ctx.status(200);
-            ctx.result(gson.toJson(gameService.createGame(authToken, gameData)));
+            ctx.result(GSON.toJson(gameService.createGame(authToken, gameData)));
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
@@ -147,7 +147,7 @@ public class Server {
         ctx.contentType("application/json");
         try {
             String authToken = ctx.header("authorization");
-            JoinGameRequest joinGameRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
+            JoinGameRequest joinGameRequest = GSON.fromJson(ctx.body(), JoinGameRequest.class);
 
             gameService.joinGame(authToken, joinGameRequest);
 
@@ -155,10 +155,10 @@ public class Server {
             ctx.result("{}");
         } catch (ResponseException e) {
             ctx.status(e.getStatusCode());
-            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
             ctx.status(500);
-            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
+            ctx.result(GSON.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 

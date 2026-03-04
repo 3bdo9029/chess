@@ -33,8 +33,12 @@ public class ChessPiece {
     // Creates a chess piece with a team color and a piece type
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         // Validate inputs
-        if (pieceColor == null) throw new IllegalArgumentException("pieceColor cannot be null");
-        if (type == null) throw new IllegalArgumentException("type cannot be null");
+        if (pieceColor == null) {
+            throw new IllegalArgumentException("pieceColor cannot be null");
+        }
+        if (type == null) {
+            throw new IllegalArgumentException("type cannot be null");
+        }
         this.pieceColor = pieceColor;
         this.type = type;
     }
@@ -73,8 +77,12 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        if (board == null) throw new IllegalArgumentException("board cannot be null");
-        if (myPosition == null) throw new IllegalArgumentException("myPosition cannot be null");
+        if (board == null) {
+            throw new IllegalArgumentException("board cannot be null");
+        }
+        if (myPosition == null) {
+            throw new IllegalArgumentException("myPosition cannot be null");
+        }
 
         Set<ChessMove> moves = new HashSet<>();
 
@@ -113,8 +121,11 @@ public class ChessPiece {
         int r1 = r + dir;
         if (onBoard(r1, c) && board.getPiece(new ChessPosition(r1, c)) == null) {
             ChessPosition to1 = new ChessPosition(r1, c);
-            if (r1 == promotionRow) addPromotionMoves(from, to1, moves);
-            else moves.add(new ChessMove(from, to1, null));
+            if (r1 == promotionRow) {
+                addPromotionMoves(from, to1, moves);
+            } else {
+                moves.add(new ChessMove(from, to1, null));
+            }
 
             // Forward two (only if forward one is clear)
             int r2 = r + 2 * dir;
@@ -127,13 +138,18 @@ public class ChessPiece {
         for (int dc : new int[]{-1, 1}) {
             int rr = r + dir;
             int cc = c + dc;
-            if (!onBoard(rr, cc)) continue;
+            if (!onBoard(rr, cc)) {
+                continue;
+            }
 
             ChessPosition to = new ChessPosition(rr, cc);
             ChessPiece target = board.getPiece(to);
             if (target != null && target.getTeamColor() != this.pieceColor) {
-                if (rr == promotionRow) addPromotionMoves(from, to, moves);
-                else moves.add(new ChessMove(from, to, null));
+                if (rr == promotionRow) {
+                    addPromotionMoves(from, to, moves);
+                } else {
+                    moves.add(new ChessMove(from, to, null));
+                }
             }
         }
 
@@ -160,7 +176,9 @@ public class ChessPiece {
 
         for (int dr = -1; dr <= 1; dr++) {
             for (int dc = -1; dc <= 1; dc++) {
-                if (dr == 0 && dc == 0) continue;
+                if (dr == 0 && dc == 0) {
+                    continue;
+                }
                 tryAddStepMove(board, from, r + dr, c + dc, moves);
             }
         }
@@ -200,7 +218,9 @@ public class ChessPiece {
     }
 
     private void tryAddStepMove(ChessBoard board, ChessPosition from, int toRow, int toCol, Set<ChessMove> moves) {
-        if (!onBoard(toRow, toCol)) return;
+        if (!onBoard(toRow, toCol)) {
+            return;
+        }
 
         ChessPosition to = new ChessPosition(toRow, toCol);
         ChessPiece target = board.getPiece(to);

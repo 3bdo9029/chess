@@ -1,4 +1,4 @@
-package dataAccess;
+package dataaccess;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
@@ -9,7 +9,7 @@ import java.util.Collection;
 import model.GameData;
 
 public class SQLGameDataAccess extends SQLDataAccess implements GameDataAccess {
-    private static final String[] createStatements = {
+    private static final String[] CREATE_STATEMENTS = {
             """
     CREATE TABLE IF NOT EXISTS game (
       gameID int NOT NULL AUTO_INCREMENT,
@@ -25,7 +25,7 @@ public class SQLGameDataAccess extends SQLDataAccess implements GameDataAccess {
     };
 
     public SQLGameDataAccess() throws ResponseException {
-        super(createStatements);
+        super(CREATE_STATEMENTS);
     }
 
     // Clears all games.

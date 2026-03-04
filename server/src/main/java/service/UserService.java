@@ -1,6 +1,6 @@
 package service;
 
-import dataAccess.*;
+import dataaccess.*;
 import exception.ResponseException;
 import model.*;
 import server.*;

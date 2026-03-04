@@ -1,11 +1,11 @@
-package dataAccess;
+package dataaccess;
 
 import exception.ResponseException;
 import java.sql.*;
 import model.UserData;
 
 public class SQLUserDataAccess extends SQLDataAccess implements UserDataAccess {
-    private static final String[] createStatements = {
+    private static final String[] CREATE_STATEMENTS = {
             """
     CREATE TABLE IF NOT EXISTS user (
       username varchar(256) NOT NULL,
@@ -17,7 +17,7 @@ public class SQLUserDataAccess extends SQLDataAccess implements UserDataAccess {
     };
 
     public SQLUserDataAccess() throws ResponseException {
-        super(createStatements);
+        super(CREATE_STATEMENTS);
     }
 
     // Clears all users.

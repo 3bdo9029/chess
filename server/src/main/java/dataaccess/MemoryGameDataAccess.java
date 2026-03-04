@@ -1,4 +1,4 @@
-package dataAccess;
+package dataaccess;
 
 import exception.ResponseException;
 import java.util.ArrayList;

@@ -1,10 +1,10 @@
-package dataAccess;
+package dataaccess;
 
 import exception.ResponseException;
 import model.AuthData;
 
 public class SQLAuthDataAccess extends SQLDataAccess implements AuthDataAccess {
-    private static final String[] createStatements = {
+    private static final String[] CREATE_STATEMENTS = {
             """
     CREATE TABLE IF NOT EXISTS auth (
       username varchar(256) NOT NULL,
@@ -16,7 +16,7 @@ public class SQLAuthDataAccess extends SQLDataAccess implements AuthDataAccess {
     };
 
     public SQLAuthDataAccess() throws ResponseException {
-        super(createStatements);
+        super(CREATE_STATEMENTS);
     }
 
     // Clear all auths.

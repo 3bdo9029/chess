@@ -1,4 +1,4 @@
-package dataAccess;
+package dataaccess;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
@@ -33,17 +33,22 @@ abstract class SQLDataAccess {
         }
     }
 
+    private void setParam(PreparedStatement ps, int index, Object param) throws SQLException {
+        if (param instanceof String p) {
+            ps.setString(index, p);
+        } else if (param instanceof Integer p) {
+            ps.setInt(index, p);
+        } else if (param == null) {
+            System.out.println("Setting param (" + index + ") to NULL...");
+            ps.setNull(index, NULL);
+        }
+    }
+
     protected int executeUpdate(String statement, Object... params) throws ResponseException {
         try (var conn = DatabaseManager.getConnection()) {
             try (var ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (var i = 0; i < params.length; i++) {
-                    var param = params[i];
-                    if (param instanceof String p) ps.setString(i + 1, p);
-                    else if (param instanceof Integer p) ps.setInt(i + 1, p);
-                    else if (param == null) {
-                        System.out.println("Setting param (" + (i + 1) + ") to NULL...");
-                        ps.setNull(i + 1, NULL);
-                    }
+                    setParam(ps, i + 1, params[i]);
                 }
                 System.out.println("Executing: " + ps.toString());
                 ps.executeUpdate();

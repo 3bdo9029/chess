@@ -37,12 +37,16 @@ public class ChessBoard {
      * Returns null if not found.
      */
     public ChessPosition findPiece(ChessPiece target) {
-        if (target == null) return null;
+        if (target == null) {
+            return null;
+        }
 
         for (int row = 1; row <= 8; row++) {
             for (int col = 1; col <= 8; col++) {
                 ChessPiece piece = squares[row - 1][col - 1];
-                if (piece == null) continue;
+                if (piece == null) {
+                    continue;
+                }
 
                 if (piece.getTeamColor() == target.getTeamColor()
                         && piece.getPieceType() == target.getPieceType()) {
@@ -160,8 +164,9 @@ public class ChessBoard {
 
     @Override
     public boolean equals(Object o) {
-        // Only boards can be equal to boards
-        if (!(o instanceof ChessBoard other)) return false;
+        if (!(o instanceof ChessBoard other)) {
+            return false;
+        }
 
         // Compare the 2D piece grid
         return Arrays.deepEquals(this.squares, other.squares);
