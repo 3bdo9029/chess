@@ -1,4 +1,4 @@
-ackage service;
+package service;
 
 import chess.ChessGame.TeamColor;
 import dataAccess.*;
