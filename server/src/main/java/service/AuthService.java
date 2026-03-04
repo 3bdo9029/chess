@@ -2,12 +2,11 @@ package service;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.mindrot.jbcrypt.BCrypt;
 
 public class AuthService {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Base64.Encoder base64Encoder = Base64.getUrlEncoder();
-    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public static String generateNewToken() {
         byte[] randomBytes = new byte[24];
@@ -16,11 +15,10 @@ public class AuthService {
     }
 
     public static String hashPassword(String providedClearTextPassword) {
-        String hashedPassword = encoder.encode(providedClearTextPassword);
-        return hashedPassword;
+        return BCrypt.hashpw(providedClearTextPassword, BCrypt.gensalt());
     }
 
     public static boolean verifyPassword(String providedClearTextPassword, String hashedPassword) {
-        return encoder.matches(providedClearTextPassword, hashedPassword);
+        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }
 }
