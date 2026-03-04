@@ -27,6 +27,9 @@ public class GameService {
         if (authDataAccess.getAuth(authToken) == null) {
             throw new ResponseException(401, "unauthorized");
         }
+        if (gameData.getGameName() == null) {
+            throw new ResponseException(400, "bad request");
+        }
         if (gameData.getGame() == null) {
             gameData.setGame(new ChessGame());
         }
@@ -59,11 +62,8 @@ public class GameService {
                 throw new ResponseException(403, "already taken");
             }
             game.setBlackUsername(auth.getUsername());
-        } else if (joinGameRequest.getPlayerColor() == null) {
-            // Add observer. Right now, there's nothing in the specification that
-            // actually requires this to be done. No "observer" fields required.
         } else {
-            throw new ResponseException(400, "invalid color");
+            throw new ResponseException(400, "bad request");
         }
         return gameDataAccess.updateGame(game.getGameId(), game);
     }

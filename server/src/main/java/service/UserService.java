@@ -33,6 +33,9 @@ public class UserService {
 
     public AuthData loginUser(LoginRequest loginRequest) throws ResponseException {
         System.out.println("Logging in user: " + loginRequest.getUsername());
+        if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+            throw new ResponseException(400, "bad request");
+        }
         UserData user = userDataAccess.getUser(loginRequest.getUsername());
         if (user == null
                 || !AuthService.verifyPassword(loginRequest.getPassword(), user.getPassword())) {
