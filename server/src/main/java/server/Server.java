@@ -3,14 +3,15 @@ package server;
 import com.google.gson.Gson;
 import dataAccess.*;
 import exception.ResponseException;
+import io.javalin.Javalin;
+import io.javalin.http.Context;
 import model.*;
 import service.*;
-import spark.Request;
-import spark.Response;
-import spark.Spark;
 
 public class Server {
     private static final Gson gson = new Gson();
+
+    private final Javalin javalin;
 
     private final UserDataAccess userDataAccess;
     private final AuthDataAccess authDataAccess;
@@ -20,15 +21,8 @@ public class Server {
     private final GameService gameService;
     private final DataService dataService;
 
-
     public Server() {
         try {
-            // If you already have in-memory DAOs, use those instead for Phase 3.
-            // Example:
-            // userDataAccess = new MemoryUserDataAccess();
-            // authDataAccess = new MemoryAuthDataAccess();
-            // gameDataAccess = new MemoryGameDataAccess();
-
             userDataAccess = new SQLUserDataAccess();
             authDataAccess = new SQLAuthDataAccess();
             gameDataAccess = new SQLGameDataAccess();
@@ -39,141 +33,137 @@ public class Server {
         } catch (Exception ex) {
             throw new RuntimeException("Failed to initialize server", ex);
         }
+
+        javalin = Javalin.create(config -> config.staticFiles.add("web"));
+
+        javalin.delete("/db", this::clearDatabase);
+        javalin.post("/user", this::register);
+        javalin.post("/session", this::login);
+        javalin.delete("/session", this::logout);
+        javalin.get("/game", this::listGames);
+        javalin.post("/game", this::createGame);
+        javalin.put("/game", this::joinGame);
     }
 
     public int run(int desiredPort) {
-        Spark.port(desiredPort);
-        Spark.staticFiles.location("web");
-
-        Spark.delete("/db", this::clearDatabase);
-        Spark.post("/user", this::register);
-        Spark.post("/session", this::login);
-        Spark.delete("/session", this::logout);
-        Spark.get("/game", this::listGames);
-        Spark.post("/game", this::createGame);
-        Spark.put("/game", this::joinGame);
-
-        Spark.awaitInitialization();
-        return Spark.port();
+        javalin.start(desiredPort);
+        return javalin.port();
     }
 
-    private String clearDatabase(Request request, Response response) {
-        response.type("application/json");
+    private void clearDatabase(Context ctx) {
+        ctx.contentType("application/json");
         try {
             dataService.clearData();
-            response.status(200);
-            return "{}";
+            ctx.status(200);
+            ctx.result("{}");
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
-    private String register(Request request, Response response) {
-        response.type("application/json");
+    private void register(Context ctx) {
+        ctx.contentType("application/json");
         try {
-            UserData user = gson.fromJson(request.body(), UserData.class);
-            response.status(200);
-            return gson.toJson(userService.registerUser(user));
+            UserData user = gson.fromJson(ctx.body(), UserData.class);
+            ctx.status(200);
+            ctx.result(gson.toJson(userService.registerUser(user)));
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
-    private String login(Request request, Response response) {
-        response.type("application/json");
+    private void login(Context ctx) {
+        ctx.contentType("application/json");
         try {
-            LoginRequest loginRequest = gson.fromJson(request.body(), LoginRequest.class);
-            response.status(200);
-            return gson.toJson(userService.loginUser(loginRequest));
+            LoginRequest loginRequest = gson.fromJson(ctx.body(), LoginRequest.class);
+            ctx.status(200);
+            ctx.result(gson.toJson(userService.loginUser(loginRequest)));
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
-    private String logout(Request request, Response response) {
-        response.type("application/json");
+    private void logout(Context ctx) {
+        ctx.contentType("application/json");
         try {
-            String authToken = request.headers("authorization");
+            String authToken = ctx.header("authorization");
             userService.logoutUser(authToken);
-            response.status(200);
-            return "{}";
+            ctx.status(200);
+            ctx.result("{}");
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
-    private String listGames(Request request, Response response) {
-        response.type("application/json");
+    private void listGames(Context ctx) {
+        ctx.contentType("application/json");
         try {
-            String authToken = request.headers("authorization");
-            response.status(200);
-            return gson.toJson(gameService.listGames(authToken));
+            String authToken = ctx.header("authorization");
+            ctx.status(200);
+            ctx.result(gson.toJson(gameService.listGames(authToken)));
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
-    private String createGame(Request request, Response response) {
-        response.type("application/json");
+    private void createGame(Context ctx) {
+        ctx.contentType("application/json");
         try {
-            String authToken = request.headers("authorization");
+            String authToken = ctx.header("authorization");
+            GameData gameData = gson.fromJson(ctx.body(), GameData.class);
 
-            // If you made a CreateGameRequest class, use that instead.
-            GameData gameData = gson.fromJson(request.body(), GameData.class);
-
-            response.status(200);
-            return gson.toJson(gameService.createGame(authToken, gameData));
+            ctx.status(200);
+            ctx.result(gson.toJson(gameService.createGame(authToken, gameData)));
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
-    private String joinGame(Request request, Response response) {
-        response.type("application/json");
+    private void joinGame(Context ctx) {
+        ctx.contentType("application/json");
         try {
-            String authToken = request.headers("authorization");
-            JoinGameRequest joinGameRequest = gson.fromJson(request.body(), JoinGameRequest.class);
+            String authToken = ctx.header("authorization");
+            JoinGameRequest joinGameRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
 
             gameService.joinGame(authToken, joinGameRequest);
 
-            response.status(200);
-            return "{}";
+            ctx.status(200);
+            ctx.result("{}");
         } catch (ResponseException e) {
-            response.status(e.getStatusCode());
-            return gson.toJson(new ErrorResponse(e.getMessage()));
+            ctx.status(e.getStatusCode());
+            ctx.result(gson.toJson(new ErrorResponse(e.getMessage())));
         } catch (Exception e) {
-            response.status(500);
-            return gson.toJson(new ErrorResponse("Error: " + e.getMessage()));
+            ctx.status(500);
+            ctx.result(gson.toJson(new ErrorResponse("Error: " + e.getMessage())));
         }
     }
 
     public void stop() {
-        Spark.stop();
-        Spark.awaitStop();
+        javalin.stop();
     }
 
     public void clear() throws ResponseException {
