@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
 import java.util.function.Consumer;
-import javax.websocket.*;
+import jakarta.websocket.*;
 import model.*;
 import webSocketMessages.userCommands.*;
 
@@ -37,6 +37,48 @@ public class ServerFacade extends Endpoint {
     public AuthData loginUser(LoginRequest loginRequest) {
         var authData = fetch("POST", "/session", gson.toJson(loginRequest), null);
         return gson.fromJson(authData, AuthData.class);
+    }
+
+    public void logoutUser(String authToken) {
+        fetch("DELETE", "/session", "", authToken);
+    }
+
+    public GameData createGame(String authToken, GameData gameData) {
+        var response = fetch("POST", "/game", gson.toJson(gameData), authToken);
+        return gson.fromJson(response, GameData.class);
+    }
+
+    public ListGamesResponse listGames(String authToken) {
+        var response = fetch("GET", "/game", "", authToken);
+        return gson.fromJson(response, ListGamesResponse.class);
+    }
+
+    public GameData joinGame(String authToken, JoinGameRequest request) throws Exception {
+        fetch("PUT", "/game", gson.toJson(request), authToken);
+        var games = listGames(authToken);
+        var gameData = games.getGames().stream()
+                .filter(g -> g.getGameId() == request.getGameId())
+                .findFirst()
+                .orElseThrow();
+        try {
+            connect();
+            send(new UserGameCommand(UserGameCommand.CommandType.CONNECT, authToken, request.getGameId()));
+        } catch (Exception e) {
+            System.err.println("WebSocket connection failed: " + e.getMessage());
+        }
+        return gameData;
+    }
+
+    public void makeMove(String authToken, int gameID, ChessMove move) throws Exception {
+        send(new MakeMoveCommand(authToken, gameID, move));
+    }
+
+    public void leaveGame(String authToken, int gameID) throws Exception {
+        send(new UserGameCommand(UserGameCommand.CommandType.LEAVE, authToken, gameID));
+    }
+
+    public void resignGame(String authToken, int gameID) throws Exception {
+        send(new UserGameCommand(UserGameCommand.CommandType.RESIGN, authToken, gameID));
     }
 
     private void connect() throws Exception {
@@ -100,5 +142,4 @@ public class ServerFacade extends Endpoint {
         InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
         return inputStreamReader;
     }
-
 }

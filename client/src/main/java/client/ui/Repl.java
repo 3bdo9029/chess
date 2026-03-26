@@ -227,7 +227,7 @@ public class Repl {
         var from = scanPosition();
         System.out.print("To (row, col): ");
         var to = scanPosition();
-        var move = new ChessMove(from, to);
+        var move = new ChessMove(from, to, null);
         try {
             serverFacade.makeMove(authData.getAuthToken(), gameData.getGameId(), move);
         } catch (Exception e) {
