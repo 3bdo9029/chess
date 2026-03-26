@@ -35,8 +35,12 @@ public class UserGameCommand {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof UserGameCommand that)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof UserGameCommand that)) {
+            return false;
+        }
         return getCommandType() == that.getCommandType() &&
                 Objects.equals(getAuthToken(), that.getAuthToken()) &&
                 Objects.equals(getGameID(), that.getGameID());
