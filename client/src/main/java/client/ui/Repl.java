@@ -336,4 +336,94 @@ public class Repl {
                 getGameString(chessGame, printBlackOnBottom, highlightPositions, selectedPosition));
     }
 
+    private static String getGameString(
+            ChessGame chessGame,
+            boolean printBlackOnBottom,
+            Collection<ChessPosition> highlightPositions,
+            ChessPosition selectedPosition) {
+        var builder = new StringBuilder();
+        if (printBlackOnBottom) {
+            for (var row = 1; row <= 8; row++) {
+                if (row == 1) appendIndicesRow(builder, row);
+                appendRow(builder, chessGame, highlightPositions, selectedPosition, row);
+                if (row == 8) appendIndicesRow(builder, row);
+            }
+        } else {
+            for (var row = 8; row >= 1; row--) {
+                if (row == 8) appendIndicesRow(builder, row);
+                appendRow(builder, chessGame, highlightPositions, selectedPosition, row);
+                if (row == 1) appendIndicesRow(builder, row);
+            }
+        }
+        builder.append(EscapeSequences.RESET_BG_COLOR + EscapeSequences.RESET_TEXT_COLOR);
+        return builder.toString();
+    }
+
+    private static void appendRow(
+            StringBuilder builder,
+            ChessGame chessGame,
+            Collection<ChessPosition> highlightPositions,
+            ChessPosition selectedPosition,
+            int row) {
+        for (var col = 1; col <= 8; col++) {
+            var rowSymbol = EscapeSequences.RESET_BG_COLOR + " " + row + " ";
+            if (col == 1) builder.append(rowSymbol);
+            var position = new ChessPosition(row, col);
+            var piece = chessGame.getBoard().getPiece(position);
+            var symbol = "";
+            if (highlightPositions.contains(position)) {
+                symbol +=
+                        row % 2 == col % 2
+                                ? EscapeSequences.SET_BG_COLOR_GREEN
+                                : EscapeSequences.SET_BG_COLOR_DARK_GREEN;
+            } else if (selectedPosition != null && selectedPosition.equals(position)) {
+                symbol += EscapeSequences.SET_BG_COLOR_YELLOW;
+            } else {
+                symbol +=
+                        row % 2 == col % 2
+                                ? EscapeSequences.SET_BG_COLOR_WHITE
+                                : EscapeSequences.SET_BG_COLOR_BLACK;
+            }
+            if (piece == null) {
+                symbol += EscapeSequences.EMPTY;
+            } else {
+                symbol +=
+                        piece.getTeamColor() == ChessGame.TeamColor.BLACK
+                                ? blackPieces.get(piece.getPieceType())
+                                : whitePieces.get(piece.getPieceType());
+            }
+            builder.append(symbol);
+            if (col == 8) builder.append(rowSymbol);
+        }
+        builder.append(EscapeSequences.RESET_BG_COLOR + "\n");
+    }
+
+    private static void appendIndicesRow(StringBuilder builder, int row) {
+        builder.append(EscapeSequences.RESET_BG_COLOR);
+        builder.append(EscapeSequences.EMPTY);
+        for (var col = 1; col <= 8; col++) {
+            var colSymbol = " " + col + " ";
+            builder.append(colSymbol);
+        }
+        builder.append(EscapeSequences.EMPTY);
+        builder.append("\n");
+    }
+
+    private static final Map<ChessPiece.PieceType, String> blackPieces =
+            Map.of(
+                    ChessPiece.PieceType.PAWN, EscapeSequences.BLACK_PAWN,
+                    ChessPiece.PieceType.KNIGHT, EscapeSequences.BLACK_KNIGHT,
+                    ChessPiece.PieceType.ROOK, EscapeSequences.BLACK_ROOK,
+                    ChessPiece.PieceType.QUEEN, EscapeSequences.BLACK_QUEEN,
+                    ChessPiece.PieceType.KING, EscapeSequences.BLACK_KING,
+                    ChessPiece.PieceType.BISHOP, EscapeSequences.BLACK_BISHOP);
+
+    private static final Map<ChessPiece.PieceType, String> whitePieces =
+            Map.of(
+                    ChessPiece.PieceType.PAWN, EscapeSequences.WHITE_PAWN,
+                    ChessPiece.PieceType.KNIGHT, EscapeSequences.WHITE_KNIGHT,
+                    ChessPiece.PieceType.ROOK, EscapeSequences.WHITE_ROOK,
+                    ChessPiece.PieceType.QUEEN, EscapeSequences.WHITE_QUEEN,
+                    ChessPiece.PieceType.KING, EscapeSequences.WHITE_KING,
+                    ChessPiece.PieceType.BISHOP, EscapeSequences.WHITE_BISHOP);
 }
