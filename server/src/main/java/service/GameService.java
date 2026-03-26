@@ -62,7 +62,7 @@ public class GameService {
                 throw new ResponseException(403, "already taken");
             }
             game.setBlackUsername(auth.getUsername());
-        } else if (joinGameRequest.getPlayerColor() != null) {
+        } else {
             throw new ResponseException(400, "bad request");
         }
         return gameDataAccess.updateGame(game.getGameId(), game);

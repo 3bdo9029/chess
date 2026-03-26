@@ -54,7 +54,9 @@ public class ServerFacade extends Endpoint {
     }
 
     public GameData joinGame(String authToken, JoinGameRequest request) throws Exception {
-        fetch("PUT", "/game", GSON.toJson(request), authToken);
+        if (request.getPlayerColor() != null) {
+            fetch("PUT", "/game", GSON.toJson(request), authToken);
+        }
         var games = listGames(authToken);
         var gameData = games.getGames().stream()
                 .filter(g -> g.getGameId() == request.getGameId())
