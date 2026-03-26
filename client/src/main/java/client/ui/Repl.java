@@ -7,10 +7,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
 import model.*;
-import webSocketMessages.serverMessages.*;
+import websocketmessages.servermessages.*;
 
 public class Repl {
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
     private ServerFacade serverFacade;
     private AuthData authData;
     private GameData gameData;
@@ -23,24 +23,24 @@ public class Repl {
 
     public void onMessage(String message) {
         System.out.println("");
-        var serverMessage = gson.fromJson(message, ServerMessage.class);
+        var serverMessage = GSON.fromJson(message, ServerMessage.class);
         switch (serverMessage.getServerMessageType()) {
             case LOAD_GAME:
             {
-                var load = gson.fromJson(message, LoadGame.class);
+                var load = GSON.fromJson(message, LoadGame.class);
                 gameData = load.getGameData();
                 printGameData();
                 break;
             }
             case ERROR:
             {
-                var error = gson.fromJson(message, ServerError.class);
+                var error = GSON.fromJson(message, ServerError.class);
                 System.err.println(error.getErrorMessage());
                 break;
             }
             case NOTIFICATION:
             {
-                var notification = gson.fromJson(message, Notification.class);
+                var notification = GSON.fromJson(message, Notification.class);
                 System.out.println(notification.getMessage());
                 break;
             }
@@ -53,7 +53,9 @@ public class Repl {
         System.out.println("Listening at " + this.serverFacade.getServerUrl());
         System.out.println("Type 'help' for a list of commands.");
         while (true) {
-            if (gameData != null) printGameData();
+            if (gameData != null) {
+                printGameData();
+            }
             System.out.print("> ");
             var command = scanner.nextLine();
             switch (command) {
@@ -344,15 +346,23 @@ public class Repl {
         var builder = new StringBuilder();
         if (printBlackOnBottom) {
             for (var row = 1; row <= 8; row++) {
-                if (row == 1) appendIndicesRow(builder, row);
+                if (row == 1) {
+                    appendIndicesRow(builder, row);
+                }
                 appendRow(builder, chessGame, highlightPositions, selectedPosition, row);
-                if (row == 8) appendIndicesRow(builder, row);
+                if (row == 8) {
+                    appendIndicesRow(builder, row);
+                }
             }
         } else {
             for (var row = 8; row >= 1; row--) {
-                if (row == 8) appendIndicesRow(builder, row);
+                if (row == 8) {
+                    appendIndicesRow(builder, row);
+                }
                 appendRow(builder, chessGame, highlightPositions, selectedPosition, row);
-                if (row == 1) appendIndicesRow(builder, row);
+                if (row == 1) {
+                    appendIndicesRow(builder, row);
+                }
             }
         }
         builder.append(EscapeSequences.RESET_BG_COLOR + EscapeSequences.RESET_TEXT_COLOR);
@@ -367,7 +377,9 @@ public class Repl {
             int row) {
         for (var col = 1; col <= 8; col++) {
             var rowSymbol = EscapeSequences.RESET_BG_COLOR + " " + row + " ";
-            if (col == 1) builder.append(rowSymbol);
+            if (col == 1) {
+                builder.append(rowSymbol);
+            }
             var position = new ChessPosition(row, col);
             var piece = chessGame.getBoard().getPiece(position);
             var symbol = "";
@@ -389,11 +401,13 @@ public class Repl {
             } else {
                 symbol +=
                         piece.getTeamColor() == ChessGame.TeamColor.BLACK
-                                ? blackPieces.get(piece.getPieceType())
-                                : whitePieces.get(piece.getPieceType());
+                                ? BLACK_PIECES.get(piece.getPieceType())
+                                : WHITE_PIECES.get(piece.getPieceType());
             }
             builder.append(symbol);
-            if (col == 8) builder.append(rowSymbol);
+            if (col == 8) {
+                builder.append(rowSymbol);
+            }
         }
         builder.append(EscapeSequences.RESET_BG_COLOR + "\n");
     }
@@ -409,7 +423,7 @@ public class Repl {
         builder.append("\n");
     }
 
-    private static final Map<ChessPiece.PieceType, String> blackPieces =
+    private static final Map<ChessPiece.PieceType, String> BLACK_PIECES =
             Map.of(
                     ChessPiece.PieceType.PAWN, EscapeSequences.BLACK_PAWN,
                     ChessPiece.PieceType.KNIGHT, EscapeSequences.BLACK_KNIGHT,
@@ -418,7 +432,7 @@ public class Repl {
                     ChessPiece.PieceType.KING, EscapeSequences.BLACK_KING,
                     ChessPiece.PieceType.BISHOP, EscapeSequences.BLACK_BISHOP);
 
-    private static final Map<ChessPiece.PieceType, String> whitePieces =
+    private static final Map<ChessPiece.PieceType, String> WHITE_PIECES =
             Map.of(
                     ChessPiece.PieceType.PAWN, EscapeSequences.WHITE_PAWN,
                     ChessPiece.PieceType.KNIGHT, EscapeSequences.WHITE_KNIGHT,

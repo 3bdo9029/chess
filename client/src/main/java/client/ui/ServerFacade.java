@@ -7,10 +7,10 @@ import java.net.*;
 import java.util.function.Consumer;
 import jakarta.websocket.*;
 import model.*;
-import webSocketMessages.userCommands.*;
+import websocketmessages.usercommands.*;
 
 public class ServerFacade extends Endpoint {
-    private static final Gson gson = new Gson();
+    private static final Gson GSON = new Gson();
     private final String serverUrl;
     private Session session;
     private final Consumer<String> onMessage;
@@ -30,13 +30,13 @@ public class ServerFacade extends Endpoint {
     }
 
     public AuthData registerUser(UserData user) {
-        var authData = fetch("POST", "/user", gson.toJson(user), null);
-        return gson.fromJson(authData, AuthData.class);
+        var authData = fetch("POST", "/user", GSON.toJson(user), null);
+        return GSON.fromJson(authData, AuthData.class);
     }
 
     public AuthData loginUser(LoginRequest loginRequest) {
-        var authData = fetch("POST", "/session", gson.toJson(loginRequest), null);
-        return gson.fromJson(authData, AuthData.class);
+        var authData = fetch("POST", "/session", GSON.toJson(loginRequest), null);
+        return GSON.fromJson(authData, AuthData.class);
     }
 
     public void logoutUser(String authToken) {
@@ -44,17 +44,17 @@ public class ServerFacade extends Endpoint {
     }
 
     public GameData createGame(String authToken, GameData gameData) {
-        var response = fetch("POST", "/game", gson.toJson(gameData), authToken);
-        return gson.fromJson(response, GameData.class);
+        var response = fetch("POST", "/game", GSON.toJson(gameData), authToken);
+        return GSON.fromJson(response, GameData.class);
     }
 
     public ListGamesResponse listGames(String authToken) {
         var response = fetch("GET", "/game", "", authToken);
-        return gson.fromJson(response, ListGamesResponse.class);
+        return GSON.fromJson(response, ListGamesResponse.class);
     }
 
     public GameData joinGame(String authToken, JoinGameRequest request) throws Exception {
-        fetch("PUT", "/game", gson.toJson(request), authToken);
+        fetch("PUT", "/game", GSON.toJson(request), authToken);
         var games = listGames(authToken);
         var gameData = games.getGames().stream()
                 .filter(g -> g.getGameId() == request.getGameId())
@@ -89,7 +89,9 @@ public class ServerFacade extends Endpoint {
         session.addMessageHandler(
                 new MessageHandler.Whole<String>() {
                     public void onMessage(String message) {
-                        if (onMessage != null) onMessage.accept(message);
+                        if (onMessage != null) {
+                            onMessage.accept(message);
+                        }
                     }
                 });
     }
@@ -100,7 +102,7 @@ public class ServerFacade extends Endpoint {
     }
 
     private void send(UserGameCommand command) throws Exception {
-        var json = gson.toJson(command);
+        var json = GSON.toJson(command);
         System.out.println("Sending command: " + json);
         session.getBasicRemote().sendText(json);
     }
@@ -121,7 +123,9 @@ public class ServerFacade extends Endpoint {
         System.out.println("Sending " + method + " request to " + url);
         URI uri = new URI(url);
         HttpURLConnection http = (HttpURLConnection) uri.toURL().openConnection();
-        if (authToken != null) http.setRequestProperty("Authorization", authToken);
+        if (authToken != null) {
+            http.setRequestProperty("Authorization", authToken);
+        }
         http.setRequestMethod(method);
         writeRequestBody(body, http);
         http.connect();
@@ -138,8 +142,17 @@ public class ServerFacade extends Endpoint {
     }
 
     private static InputStreamReader receiveResponse(HttpURLConnection http) throws IOException {
+        int status = http.getResponseCode();
+        if (status >= 400) {
+            InputStream errorBody = http.getErrorStream();
+            String msg = errorBody != null ? new String(errorBody.readAllBytes()) : "HTTP " + status;
+            throw new IOException(msg);
+        }
         InputStream responseBody = http.getInputStream();
-        InputStreamReader inputStreamReader = new InputStreamReader(responseBody);
-        return inputStreamReader;
+        return new InputStreamReader(responseBody);
+    }
+
+    public void clearDatabase() {
+        fetch("DELETE", "/db", "", null);
     }
 }
