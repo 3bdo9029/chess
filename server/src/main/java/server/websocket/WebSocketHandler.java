@@ -156,4 +156,25 @@ public class WebSocketHandler {
             System.err.println("Failed to send message: " + e.getMessage());
         }
     }
+
+    private void sendError(Session session, String errorMessage) {
+        try {
+            session.getBasicRemote().sendText(GSON.toJson(new ServerError(errorMessage)));
+        } catch (IOException e) {
+            System.err.println("Failed to send error: " + e.getMessage());
+        }
+    }
+
+    private void broadcastAll(int gameID, ServerMessage msg) {
+        String json = GSON.toJson(msg);
+        for (Session session : gameSessions.getOrDefault(gameID, Set.of())) {
+            if (session.isOpen()) {
+                try {
+                    session.getBasicRemote().sendText(json);
+                } catch (IOException e) {
+                    System.err.println("Broadcast failed: " + e.getMessage());
+                }
+            }
+        }
+    }
 }
