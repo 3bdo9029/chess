@@ -132,4 +132,28 @@ public class WebSocketHandler {
             sendError(ctx.session(), "Error: " + e.getMessage());
         }
     }
+
+    private void handleResign(WsMessageContext ctx, UserGameCommand cmd) {
+        try {
+            AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
+            if (auth == null) {
+                sendError(ctx.session(), "Error: unauthorized");
+                return;
+            }
+            gameService.resignGame(cmd.getAuthToken(), cmd.getGameID());
+            broadcastAll(cmd.getGameID(), new Notification(auth.getUsername() + " resigned. Game over."));
+        } catch (ResponseException e) {
+            sendError(ctx.session(), e.getMessage());
+        } catch (Exception e) {
+            sendError(ctx.session(), "Error: " + e.getMessage());
+        }
+    }
+
+    private void sendToSession(Session session, ServerMessage msg) {
+        try {
+            session.getBasicRemote().sendText(GSON.toJson(msg));
+        } catch (IOException e) {
+            System.err.println("Failed to send message: " + e.getMessage());
+        }
+    }
 }
