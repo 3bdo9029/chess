@@ -20,5 +20,22 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WebSocketHandler {
+    private static final Gson GSON = new Gson();
 
+    // gameID -> set of sessions connected to that game
+    private final Map<Integer, Set<Session>> gameSessions = new ConcurrentHashMap<>();
+    // session -> gameID (for cleanup on close)
+    private final Map<Session, Integer> sessionGame = new ConcurrentHashMap<>();
+
+    private final GameService gameService;
+    private final AuthDataAccess authDataAccess;
+    private final GameDataAccess gameDataAccess;
+
+    public WebSocketHandler(GameService gameService, AuthDataAccess authDataAccess, GameDataAccess gameDataAccess) {
+        this.gameService = gameService;
+        this.authDataAccess = authDataAccess;
+        this.gameDataAccess = gameDataAccess;
+    }
+
+    public void onConnect(WsConnectContext ctx) {}
 }
