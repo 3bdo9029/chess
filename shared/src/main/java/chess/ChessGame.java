@@ -13,6 +13,7 @@ public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
     private TeamColor resigned;
+    private boolean gameOver;
     private ChessPosition enPassantTarget;
     private boolean whiteKingMoved, whiteKingRookMoved, whiteQueenRookMoved;
     private boolean blackKingMoved, blackKingRookMoved, blackQueenRookMoved;
@@ -44,6 +45,7 @@ public class ChessGame {
         this.board = new ChessBoard(other.board);
         this.teamTurn = other.teamTurn;
         this.resigned = other.resigned;
+        this.gameOver = other.gameOver;
         this.enPassantTarget = other.enPassantTarget;
         this.whiteKingMoved = other.whiteKingMoved;
         this.whiteKingRookMoved = other.whiteKingRookMoved;
@@ -56,6 +58,10 @@ public class ChessGame {
     public TeamColor getResigned() { return resigned; }
 
     public void setResigned(TeamColor resigned) { this.resigned = resigned; }
+
+    public boolean isGameOver() { return gameOver || resigned != null; }
+
+    public void setGameOver(boolean gameOver) { this.gameOver = gameOver; }
 
     /** @return Which team's turn it is */
     public TeamColor getTeamTurn() { return teamTurn; }
@@ -120,8 +126,8 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        if (resigned != null) {
-            throw new InvalidMoveException("The game has been resigned. No moves can be made.");
+        if (isGameOver()) {
+            throw new InvalidMoveException("The game is over. No moves can be made.");
         }
         if (move == null) {
             throw new InvalidMoveException("Move cannot be null.");
