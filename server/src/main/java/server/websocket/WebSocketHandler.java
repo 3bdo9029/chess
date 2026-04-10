@@ -89,4 +89,47 @@ public class WebSocketHandler {
             sendError(ctx.session(), "Error: " + e.getMessage());
         }
     }
+
+    private void handleMakeMove(WsMessageContext ctx, MakeMoveCommand cmd) {
+        try {
+            GameData game = gameService.makeMove(cmd.getAuthToken(), cmd.getGameID(), cmd.getMove());
+            broadcastAll(cmd.getGameID(), new LoadGame(game));
+
+            AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
+            broadcastExcept(cmd.getGameID(), ctx.session(),
+                    new Notification(auth.getUsername() + " moved " + cmd.getMove()));
+
+            ChessGame chessGame = game.getGame();
+            ChessGame.TeamColor nextTurn = chessGame.getTeamTurn();
+            String nextPlayer = nextTurn == ChessGame.TeamColor.WHITE
+                    ? game.getWhiteUsername() : game.getBlackUsername();
+            if (chessGame.isInCheckmate(nextTurn)) {
+                broadcastAll(cmd.getGameID(), new Notification(nextPlayer + " is in checkmate! Game over."));
+            } else if (chessGame.isInStalemate(nextTurn)) {
+                broadcastAll(cmd.getGameID(), new Notification("Stalemate! The game is a draw."));
+            } else if (chessGame.isInCheck(nextTurn)) {
+                broadcastAll(cmd.getGameID(), new Notification(nextPlayer + " is in check!"));
+            }
+        } catch (ResponseException e) {
+            sendError(ctx.session(), e.getMessage());
+        } catch (Exception e) {
+            sendError(ctx.session(), "Error: " + e.getMessage());
+        }
+    }
+
+    private void handleLeave(WsMessageContext ctx, UserGameCommand cmd) {
+        try {
+            AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
+            if (auth == null) {
+                sendError(ctx.session(), "Error: unauthorized");
+                return;
+            }
+            gameService.leaveGame(cmd.getAuthToken(), cmd.getGameID());
+            gameSessions.getOrDefault(cmd.getGameID(), Set.of()).remove(ctx.session());
+            sessionGame.remove(ctx.session());
+            broadcastAll(cmd.getGameID(), new Notification(auth.getUsername() + " left the game."));
+        } catch (Exception e) {
+            sendError(ctx.session(), "Error: " + e.getMessage());
+        }
+    }
 }
