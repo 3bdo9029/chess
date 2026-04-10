@@ -171,30 +171,25 @@ public class WebSocketHandler {
     }
 
     private void broadcastAll(int gameID, ServerMessage msg) {
+        broadcast(gameID, null, msg);
+    }
+
+    private void broadcastExcept(int gameID, String excludeSid, ServerMessage msg) {
+        broadcast(gameID, excludeSid, msg);
+    }
+
+    private void broadcast(int gameID, String excludeSid, ServerMessage msg) {
         String json = GSON.toJson(msg);
         for (String sid : gameSessions.getOrDefault(gameID, Set.of())) {
+            if (excludeSid != null && sid.equals(excludeSid)) {
+                continue;
+            }
             WsContext session = sessionContexts.get(sid);
             if (session != null) {
                 try {
                     session.send(json);
                 } catch (Exception e) {
                     System.err.println("Broadcast failed: " + e.getMessage());
-                }
-            }
-        }
-    }
-
-    private void broadcastExcept(int gameID, String excludeSid, ServerMessage msg) {
-        String json = GSON.toJson(msg);
-        for (String sid : gameSessions.getOrDefault(gameID, Set.of())) {
-            if (!sid.equals(excludeSid)) {
-                WsContext session = sessionContexts.get(sid);
-                if (session != null) {
-                    try {
-                        session.send(json);
-                    } catch (Exception e) {
-                        System.err.println("Broadcast failed: " + e.getMessage());
-                    }
                 }
             }
         }

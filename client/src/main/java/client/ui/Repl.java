@@ -28,7 +28,7 @@ public class Repl {
             case LOAD_GAME:
             {
                 var load = GSON.fromJson(message, LoadGame.class);
-                gameData = load.getGameData();
+                gameData = load.getGame();
                 printGameData();
                 break;
             }
