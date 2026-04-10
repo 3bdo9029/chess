@@ -38,4 +38,25 @@ public class WebSocketHandler {
     }
 
     public void onConnect(WsConnectContext ctx) {}
+
+    public void onMessage(WsMessageContext ctx) {
+        var cmd = GSON.fromJson(ctx.message(), UserGameCommand.class);
+        switch (cmd.getCommandType()) {
+            case CONNECT   -> handleConnect(ctx, cmd);
+            case MAKE_MOVE -> handleMakeMove(ctx, GSON.fromJson(ctx.message(), MakeMoveCommand.class));
+            case LEAVE     -> handleLeave(ctx, cmd);
+            case RESIGN    -> handleResign(ctx, cmd);
+        }
+    }
+
+    public void onClose(WsCloseContext ctx) {
+        Integer gameID = sessionGame.remove(ctx.session());
+        if (gameID != null) {
+            Set<Session> sessions = gameSessions.get(gameID);
+            if (sessions != null) {
+                sessions.remove(ctx.session());
+            }
+        }
+    }
+
 }
