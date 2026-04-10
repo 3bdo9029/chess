@@ -177,4 +177,17 @@ public class WebSocketHandler {
             }
         }
     }
+
+    private void broadcastExcept(int gameID, Session exclude, ServerMessage msg) {
+        String json = GSON.toJson(msg);
+        for (Session session : gameSessions.getOrDefault(gameID, Set.of())) {
+            if (session.isOpen() && !session.equals(exclude)) {
+                try {
+                    session.getBasicRemote().sendText(json);
+                } catch (IOException e) {
+                    System.err.println("Broadcast failed: " + e.getMessage());
+                }
+            }
+        }
+    }
 }
