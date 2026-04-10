@@ -6,6 +6,7 @@ import exception.ResponseException;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import model.*;
+import server.websocket.WebSocketHandler;
 import service.*;
 
 public class Server {
