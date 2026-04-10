@@ -6,7 +6,6 @@ import dataaccess.AuthDataAccess;
 import dataaccess.GameDataAccess;
 import exception.ResponseException;
 import io.javalin.websocket.*;
-import jakarta.websocket.Session;
 import model.AuthData;
 import model.GameData;
 import service.GameService;
@@ -14,7 +13,6 @@ import websocketmessages.servermessages.*;
 import websocketmessages.usercommands.MakeMoveCommand;
 import websocketmessages.usercommands.UserGameCommand;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,10 +20,12 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketHandler {
     private static final Gson GSON = new Gson();
 
-    // gameID -> set of sessions connected to that game
-    private final Map<Integer, Set<Session>> gameSessions = new ConcurrentHashMap<>();
-    // session -> gameID (for cleanup on close)
-    private final Map<Session, Integer> sessionGame = new ConcurrentHashMap<>();
+    // gameID -> set of session IDs connected to that game
+    private final Map<Integer, Set<String>> gameSessions = new ConcurrentHashMap<>();
+    // sessionId -> gameID (for cleanup on close)
+    private final Map<String, Integer> sessionGame = new ConcurrentHashMap<>();
+    // sessionId -> WsContext (to be able to send messages later)
+    private final Map<String, WsContext> sessionContexts = new ConcurrentHashMap<>();
 
     private final GameService gameService;
     private final AuthDataAccess authDataAccess;
@@ -37,9 +37,12 @@ public class WebSocketHandler {
         this.gameDataAccess = gameDataAccess;
     }
 
-    public void onConnect(WsConnectContext ctx) {}
+    public void onConnect(WsConnectContext ctx) {
+        sessionContexts.put(ctx.sessionId(), ctx);
+    }
 
     public void onMessage(WsMessageContext ctx) {
+        sessionContexts.put(ctx.sessionId(), ctx);
         var cmd = GSON.fromJson(ctx.message(), UserGameCommand.class);
         switch (cmd.getCommandType()) {
             case CONNECT   -> handleConnect(ctx, cmd);
@@ -50,31 +53,33 @@ public class WebSocketHandler {
     }
 
     public void onClose(WsCloseContext ctx) {
-        Integer gameID = sessionGame.remove(ctx.session());
+        String sid = ctx.sessionId();
+        Integer gameID = sessionGame.remove(sid);
         if (gameID != null) {
-            Set<Session> sessions = gameSessions.get(gameID);
+            Set<String> sessions = gameSessions.get(gameID);
             if (sessions != null) {
-                sessions.remove(ctx.session());
+                sessions.remove(sid);
             }
         }
+        sessionContexts.remove(sid);
     }
 
     private void handleConnect(WsMessageContext ctx, UserGameCommand cmd) {
         try {
             AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
             if (auth == null) {
-                sendError(ctx.session(), "Error: unauthorized");
+                sendError(ctx, "Error: unauthorized");
                 return;
             }
             GameData game = gameDataAccess.getGame(cmd.getGameID());
             if (game == null) {
-                sendError(ctx.session(), "Error: game not found");
+                sendError(ctx, "Error: game not found");
                 return;
             }
-            gameSessions.computeIfAbsent(cmd.getGameID(), k -> ConcurrentHashMap.newKeySet()).add(ctx.session());
-            sessionGame.put(ctx.session(), cmd.getGameID());
+            gameSessions.computeIfAbsent(cmd.getGameID(), k -> ConcurrentHashMap.newKeySet()).add(ctx.sessionId());
+            sessionGame.put(ctx.sessionId(), cmd.getGameID());
 
-            sendToSession(ctx.session(), new LoadGame(game));
+            sendToSession(ctx, new LoadGame(game));
 
             String notificationMsg;
             if (auth.getUsername().equals(game.getWhiteUsername())) {
@@ -84,9 +89,9 @@ public class WebSocketHandler {
             } else {
                 notificationMsg = auth.getUsername() + " joined as an observer";
             }
-            broadcastExcept(cmd.getGameID(), ctx.session(), new Notification(notificationMsg));
+            broadcastExcept(cmd.getGameID(), ctx.sessionId(), new Notification(notificationMsg));
         } catch (Exception e) {
-            sendError(ctx.session(), "Error: " + e.getMessage());
+            sendError(ctx, "Error: " + e.getMessage());
         }
     }
 
@@ -96,7 +101,7 @@ public class WebSocketHandler {
             broadcastAll(cmd.getGameID(), new LoadGame(game));
 
             AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
-            broadcastExcept(cmd.getGameID(), ctx.session(),
+            broadcastExcept(cmd.getGameID(), ctx.sessionId(),
                     new Notification(auth.getUsername() + " moved " + cmd.getMove()));
 
             ChessGame chessGame = game.getGame();
@@ -111,9 +116,9 @@ public class WebSocketHandler {
                 broadcastAll(cmd.getGameID(), new Notification(nextPlayer + " is in check!"));
             }
         } catch (ResponseException e) {
-            sendError(ctx.session(), e.getMessage());
+            sendError(ctx, e.getMessage());
         } catch (Exception e) {
-            sendError(ctx.session(), "Error: " + e.getMessage());
+            sendError(ctx, "Error: " + e.getMessage());
         }
     }
 
@@ -121,15 +126,15 @@ public class WebSocketHandler {
         try {
             AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
             if (auth == null) {
-                sendError(ctx.session(), "Error: unauthorized");
+                sendError(ctx, "Error: unauthorized");
                 return;
             }
             gameService.leaveGame(cmd.getAuthToken(), cmd.getGameID());
-            gameSessions.getOrDefault(cmd.getGameID(), Set.of()).remove(ctx.session());
-            sessionGame.remove(ctx.session());
+            gameSessions.getOrDefault(cmd.getGameID(), Set.of()).remove(ctx.sessionId());
+            sessionGame.remove(ctx.sessionId());
             broadcastAll(cmd.getGameID(), new Notification(auth.getUsername() + " left the game."));
         } catch (Exception e) {
-            sendError(ctx.session(), "Error: " + e.getMessage());
+            sendError(ctx, "Error: " + e.getMessage());
         }
     }
 
@@ -137,55 +142,59 @@ public class WebSocketHandler {
         try {
             AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
             if (auth == null) {
-                sendError(ctx.session(), "Error: unauthorized");
+                sendError(ctx, "Error: unauthorized");
                 return;
             }
             gameService.resignGame(cmd.getAuthToken(), cmd.getGameID());
             broadcastAll(cmd.getGameID(), new Notification(auth.getUsername() + " resigned. Game over."));
         } catch (ResponseException e) {
-            sendError(ctx.session(), e.getMessage());
+            sendError(ctx, e.getMessage());
         } catch (Exception e) {
-            sendError(ctx.session(), "Error: " + e.getMessage());
+            sendError(ctx, "Error: " + e.getMessage());
         }
     }
 
-    private void sendToSession(Session session, ServerMessage msg) {
+    private void sendToSession(WsContext ctx, ServerMessage msg) {
         try {
-            session.getBasicRemote().sendText(GSON.toJson(msg));
-        } catch (IOException e) {
+            ctx.send(GSON.toJson(msg));
+        } catch (Exception e) {
             System.err.println("Failed to send message: " + e.getMessage());
         }
     }
 
-    private void sendError(Session session, String errorMessage) {
+    private void sendError(WsContext ctx, String errorMessage) {
         try {
-            session.getBasicRemote().sendText(GSON.toJson(new ServerError(errorMessage)));
-        } catch (IOException e) {
+            ctx.send(GSON.toJson(new ServerError(errorMessage)));
+        } catch (Exception e) {
             System.err.println("Failed to send error: " + e.getMessage());
         }
     }
 
     private void broadcastAll(int gameID, ServerMessage msg) {
         String json = GSON.toJson(msg);
-        for (Session session : gameSessions.getOrDefault(gameID, Set.of())) {
-            if (session.isOpen()) {
+        for (String sid : gameSessions.getOrDefault(gameID, Set.of())) {
+            WsContext session = sessionContexts.get(sid);
+            if (session != null) {
                 try {
-                    session.getBasicRemote().sendText(json);
-                } catch (IOException e) {
+                    session.send(json);
+                } catch (Exception e) {
                     System.err.println("Broadcast failed: " + e.getMessage());
                 }
             }
         }
     }
 
-    private void broadcastExcept(int gameID, Session exclude, ServerMessage msg) {
+    private void broadcastExcept(int gameID, String excludeSid, ServerMessage msg) {
         String json = GSON.toJson(msg);
-        for (Session session : gameSessions.getOrDefault(gameID, Set.of())) {
-            if (session.isOpen() && !session.equals(exclude)) {
-                try {
-                    session.getBasicRemote().sendText(json);
-                } catch (IOException e) {
-                    System.err.println("Broadcast failed: " + e.getMessage());
+        for (String sid : gameSessions.getOrDefault(gameID, Set.of())) {
+            if (!sid.equals(excludeSid)) {
+                WsContext session = sessionContexts.get(sid);
+                if (session != null) {
+                    try {
+                        session.send(json);
+                    } catch (Exception e) {
+                        System.err.println("Broadcast failed: " + e.getMessage());
+                    }
                 }
             }
         }
