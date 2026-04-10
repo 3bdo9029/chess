@@ -35,7 +35,14 @@ public class Server {
             throw new RuntimeException("Failed to initialize server", ex);
         }
 
+        var wsHandler = new WebSocketHandler(gameService, authDataAccess, gameDataAccess);
         javalin = Javalin.create(config -> config.staticFiles.add("web"));
+
+        javalin.ws("/ws", ws -> {
+            ws.onConnect(wsHandler::onConnect);
+            ws.onMessage(wsHandler::onMessage);
+            ws.onClose(wsHandler::onClose);
+        });
 
         javalin.delete("/db", this::clearDatabase);
         javalin.post("/user", this::register);
