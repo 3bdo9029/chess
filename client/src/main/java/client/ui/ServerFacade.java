@@ -7,7 +7,7 @@ import java.net.*;
 import java.util.function.Consumer;
 import jakarta.websocket.*;
 import model.*;
-import websocketmessages.usercommands.*;
+import websocket.commands.*;
 
 public class ServerFacade extends Endpoint {
     private static final Gson GSON = new Gson();

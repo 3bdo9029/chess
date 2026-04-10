@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
 import model.*;
-import websocketmessages.servermessages.*;
+import websocket.messages.*;
 
 public class Repl {
     private static final Gson GSON = new Gson();

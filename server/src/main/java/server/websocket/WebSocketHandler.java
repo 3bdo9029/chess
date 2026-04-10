@@ -9,9 +9,9 @@ import io.javalin.websocket.*;
 import model.AuthData;
 import model.GameData;
 import service.GameService;
-import websocketmessages.servermessages.*;
-import websocketmessages.usercommands.MakeMoveCommand;
-import websocketmessages.usercommands.UserGameCommand;
+import websocket.messages.*;
+import websocket.commands.MakeMoveCommand;
+import websocket.commands.UserGameCommand;
 
 import java.util.Map;
 import java.util.Set;
