@@ -84,7 +84,7 @@ public class ServerFacade extends Endpoint {
     }
 
     private void connect() throws Exception {
-        var uri = new URI(serverUrl.replace("http:", "ws:") + "/connect");
+        var uri = new URI(serverUrl.replace("http:", "ws:") + "/ws");
         System.out.println("Connecting to " + uri);
         var container = ContainerProvider.getWebSocketContainer();
         session = container.connectToServer(this, uri);
