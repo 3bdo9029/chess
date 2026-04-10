@@ -59,4 +59,34 @@ public class WebSocketHandler {
         }
     }
 
+    private void handleConnect(WsMessageContext ctx, UserGameCommand cmd) {
+        try {
+            AuthData auth = authDataAccess.getAuth(cmd.getAuthToken());
+            if (auth == null) {
+                sendError(ctx.session(), "Error: unauthorized");
+                return;
+            }
+            GameData game = gameDataAccess.getGame(cmd.getGameID());
+            if (game == null) {
+                sendError(ctx.session(), "Error: game not found");
+                return;
+            }
+            gameSessions.computeIfAbsent(cmd.getGameID(), k -> ConcurrentHashMap.newKeySet()).add(ctx.session());
+            sessionGame.put(ctx.session(), cmd.getGameID());
+
+            sendToSession(ctx.session(), new LoadGame(game));
+
+            String notificationMsg;
+            if (auth.getUsername().equals(game.getWhiteUsername())) {
+                notificationMsg = auth.getUsername() + " joined as WHITE";
+            } else if (auth.getUsername().equals(game.getBlackUsername())) {
+                notificationMsg = auth.getUsername() + " joined as BLACK";
+            } else {
+                notificationMsg = auth.getUsername() + " joined as an observer";
+            }
+            broadcastExcept(cmd.getGameID(), ctx.session(), new Notification(notificationMsg));
+        } catch (Exception e) {
+            sendError(ctx.session(), "Error: " + e.getMessage());
+        }
+    }
 }
