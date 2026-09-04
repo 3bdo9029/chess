@@ -4,15 +4,17 @@ import chess.ChessMove;
 import com.google.gson.Gson;
 import java.io.*;
 import java.net.*;
+import java.net.http.*;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Consumer;
-import jakarta.websocket.*;
 import model.*;
 import websocket.commands.*;
 
-public class ServerFacade extends Endpoint {
+public class ServerFacade {
     private static final Gson GSON = new Gson();
     private final String serverUrl;
-    private Session session;
+    private WebSocket webSocket;
     private final Consumer<String> onMessage;
 
     public ServerFacade(String serverUrl) {
@@ -86,34 +88,53 @@ public class ServerFacade extends Endpoint {
     private void connect() throws Exception {
         var uri = new URI(serverUrl.replace("http:", "ws:") + "/ws");
         System.out.println("Connecting to " + uri);
-        var container = ContainerProvider.getWebSocketContainer();
-        session = container.connectToServer(this, uri);
-        session.addMessageHandler(
-                new MessageHandler.Whole<String>() {
-                    public void onMessage(String message) {
-                        if (onMessage != null) {
-                            onMessage.accept(message);
-                        }
-                    }
-                });
-    }
+        CountDownLatch openLatch = new CountDownLatch(1);
+        var listener = new WebSocket.Listener() {
+            @Override
+            public void onOpen(WebSocket ws) {
+                System.out.println("Connected to websocket server.");
+                ws.request(1);
+                openLatch.countDown();
+            }
 
-    @Override
-    public void onOpen(Session session, EndpointConfig config) {
-        System.out.println("Connected to websocket server.");
+            private final StringBuilder buf = new StringBuilder();
+
+            @Override
+            public CompletionStage<?> onText(WebSocket ws, CharSequence data, boolean last) {
+                buf.append(data);
+                ws.request(1);
+                if (last) {
+                    String message = buf.toString();
+                    buf.setLength(0);
+                    if (onMessage != null) {
+                        onMessage.accept(message);
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public void onError(WebSocket ws, Throwable error) {
+                System.err.println("WebSocket error: " + error.getMessage());
+            }
+        };
+        webSocket = HttpClient.newHttpClient()
+                .newWebSocketBuilder()
+                .buildAsync(uri, listener)
+                .get();
+        openLatch.await();
     }
 
     private void send(UserGameCommand command) throws Exception {
         var json = GSON.toJson(command);
         System.out.println("Sending command: " + json);
-        session.getBasicRemote().sendText(json);
+        webSocket.sendText(json, true).get();
     }
 
     private InputStreamReader fetch(String method, String path, String body, String authToken) {
         try {
             var http = sendRequest(method, serverUrl + path, body, authToken);
-            var response = receiveResponse(http);
-            return response;
+            return receiveResponse(http);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -150,8 +171,7 @@ public class ServerFacade extends Endpoint {
             String msg = errorBody != null ? new String(errorBody.readAllBytes()) : "HTTP " + status;
             throw new IOException(msg);
         }
-        InputStream responseBody = http.getInputStream();
-        return new InputStreamReader(responseBody);
+        return new InputStreamReader(http.getInputStream());
     }
 
     public void clearDatabase() {

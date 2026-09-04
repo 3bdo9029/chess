@@ -1,8 +1,9 @@
-package dataaccess;
+package dataaccess.sql;
 
 import static java.sql.Statement.RETURN_GENERATED_KEYS;
 import static java.sql.Types.NULL;
 
+import dataaccess.*;
 import exception.ResponseException;
 import java.sql.*;
 

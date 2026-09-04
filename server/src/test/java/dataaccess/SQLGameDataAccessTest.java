@@ -2,6 +2,7 @@ package dataaccess;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dataaccess.sql.*;
 import chess.ChessGame;
 import exception.ResponseException;
 import model.GameData;
