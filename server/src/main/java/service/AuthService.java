@@ -8,6 +8,9 @@ public class AuthService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final Base64.Encoder BASE64_ENCODER = Base64.getUrlEncoder();
 
+    private AuthService() {
+    }
+
     public static String generateNewToken() {
         byte[] randomBytes = new byte[24];
         SECURE_RANDOM.nextBytes(randomBytes);

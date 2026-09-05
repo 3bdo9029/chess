@@ -86,6 +86,20 @@ public class UserServiceTest {
     }
 
     @Test
+    public void loginUserNullUsernameFails() {
+        LoginRequest req = new LoginRequest(null, "password");
+        ResponseException ex = assertThrows(ResponseException.class, () -> userService.loginUser(req));
+        assertEquals(400, ex.getStatusCode());
+    }
+
+    @Test
+    public void loginUserNullPasswordFails() {
+        LoginRequest req = new LoginRequest("alice", null);
+        ResponseException ex = assertThrows(ResponseException.class, () -> userService.loginUser(req));
+        assertEquals(400, ex.getStatusCode());
+    }
+
+    @Test
     public void logoutUserSuccess() throws ResponseException {
         UserData user = new UserData("alice", "password123", "alice@example.com");
         AuthData auth = userService.registerUser(user);
