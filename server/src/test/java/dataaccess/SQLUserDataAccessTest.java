@@ -55,4 +55,11 @@ public class SQLUserDataAccessTest {
     public void getUserNotFoundReturnsNull() throws ResponseException {
         assertNull(userDao.getUser("nobody"));
     }
+
+    @Test
+    public void getUserWhenTableMissingThrows() throws Exception {
+        SqlTestUtil.dropTables("game", "auth", "user");
+        ResponseException ex = assertThrows(ResponseException.class, () -> userDao.getUser("alice"));
+        assertEquals(500, ex.getStatusCode());
+    }
 }

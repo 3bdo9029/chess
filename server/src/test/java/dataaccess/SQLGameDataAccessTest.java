@@ -90,4 +90,18 @@ public class SQLGameDataAccessTest {
     public void listGamesEmptySuccess() throws ResponseException {
         assertTrue(gameDao.listGames().isEmpty());
     }
+
+    @Test
+    public void getGameCorruptJsonThrows() throws Exception {
+        int gameId = SqlTestUtil.insertCorruptGame();
+        ResponseException ex = assertThrows(ResponseException.class, () -> gameDao.getGame(gameId));
+        assertEquals(500, ex.getStatusCode());
+    }
+
+    @Test
+    public void listGamesCorruptJsonThrows() throws Exception {
+        SqlTestUtil.insertCorruptGame();
+        ResponseException ex = assertThrows(ResponseException.class, () -> gameDao.listGames());
+        assertEquals(500, ex.getStatusCode());
+    }
 }

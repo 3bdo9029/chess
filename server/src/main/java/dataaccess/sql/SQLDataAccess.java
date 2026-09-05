@@ -25,10 +25,7 @@ abstract class SQLDataAccess {
                     }
                 }
             }
-        } catch (SQLException ex) {
-            throw new ResponseException(
-                    500, String.format("Unable to configure database: %s", ex.getMessage()));
-        } catch (DataAccessException ex) {
+        } catch (SQLException | DataAccessException ex) {
             throw new ResponseException(
                     500, String.format("Unable to configure database: %s", ex.getMessage()));
         }
@@ -61,10 +58,7 @@ abstract class SQLDataAccess {
 
                 return 0;
             }
-        } catch (SQLException e) {
-            throw new ResponseException(
-                    500, String.format("unable to update database: %s, %s", statement, e.getMessage()));
-        } catch (DataAccessException e) {
+        } catch (SQLException | DataAccessException e) {
             throw new ResponseException(
                     500, String.format("unable to update database: %s, %s", statement, e.getMessage()));
         }

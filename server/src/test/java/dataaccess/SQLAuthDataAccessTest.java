@@ -72,4 +72,11 @@ public class SQLAuthDataAccessTest {
     public void deleteAuthNonexistentDoesNotThrow() {
         assertDoesNotThrow(() -> authDao.deleteAuth("ghost-token"));
     }
+
+    @Test
+    public void getAuthWhenTableMissingThrows() throws Exception {
+        SqlTestUtil.dropTables("game", "auth");
+        ResponseException ex = assertThrows(ResponseException.class, () -> authDao.getAuth("token-abc"));
+        assertEquals(500, ex.getStatusCode());
+    }
 }
